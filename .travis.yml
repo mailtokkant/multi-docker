@@ -2,24 +2,38 @@ language: generic
 #super user is required (Everytime whenever we use docker we need super user permission)
 sudo: required
 Services:
-  - docker #we need a already installed docker run our commands
+  - docker #docker dependency for building test project ans running the test cases
+#build all the images required for test run
 before_install:
-  - docker build -t mailtokkant/multi-docker -f Dockerfile.dev  .  #building using dev setup to run the test case
+  - docker build -t mailtokkant/multi-docker-test -f ./client/Dockerfile.dev  ./client  #building using dev setup to run the test case
 
 # command to run test, scripts should exit by themself with non-zero return
 script:
-  - docker run -e CI=true mailtokkant/multi-docker npm run test
+  - docker run -e CI=true mailtokkant/multi-docker-test npm run test
+
+# build all the production version images
+after_success:
+  - docker build -t  mailtokkant/multi-client ./client
+  - docker build -t  mailtokkant/multi-nginx ./nginx
+  - docker build -t  mailtokkant/multi-server ./server
+  - docker build -t  mailtokkant/multi-worker ./worker
+  # login to docker
+  - echo "$DOCKER_PWD" | docker login "$DOCKER_ID" --password-stdin
+  # push these images to docker hub
+  - docker push mailtokkant/multi-client
+  - docker push mailtokkant/multi-nginx
+  - docker push mailtokkant/multi-server
+  - docker push mailtokkant/multi-worker
 
 #how to deploy on AWS server
-deploy:
-  provider: elasticbeansstalk
-  region: "us-east-2"
-  app: "multi-docker"
-  env: "MultiDocker-env"
-  bucket_name: elasticbeanstalk-us-east-2-033359462692
-  bucket_path: "multi-docker"
-  on:
-    branch: master
-    access_key_id: $AWS_ACCESS_KEY
-    secret_access_key:
-      secure: "$AWS_SECRET_KEY"
+#deploy:
+#  provider: elasticbeansstalk
+#  region: "us-east-2"
+#  app: "multi-docker"
+#  env: "MultiDocker-env"
+#  bucket_name: elasticbeanstalk-us-east-2-033359462692
+#  bucket_path: "multi-docker"
+#  on:
+#    branch: master
+#    access_key_id: $AWS_ACCESS_KEY
+#    secret_access_key: $AWS_SECRET_KEY
