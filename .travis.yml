@@ -1,0 +1,11 @@
+language: generic
+#super user is required (Everytime whenever we use docker we need super user permission)
+sudo: required
+Services:
+  - docker #we need a already installed docker run our commands
+before_install:
+  - dokcer build -t mailtokkant/multi-docker -f Dockerfile.dev  .  #building using dev setup to run the test case
+
+# command to run test, scripts should exit by themself with non-zero return
+script:
+  - docker run -e CI=true mailtokkant/multi-docker npm run test
