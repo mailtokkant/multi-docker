@@ -9,3 +9,17 @@ before_install:
 # command to run test, scripts should exit by themself with non-zero return
 script:
   - docker run -e CI=true mailtokkant/multi-docker npm run test
+
+#how to deploy on AWS server
+deploy:
+  provider: elasticbeansstalk
+  region: "us-east-2"
+  app: "multi-docker"
+  env: "MultiDocker-env"
+  bucket_name: elasticbeanstalk-us-east-2-033359462692
+  bucket_path: "multi-docker"
+  on:
+    branch: master
+    access_key_id: $AWS_ACCESS_KEY
+    secret_access_key:
+      secure: "$AWS_SECRET_KEY"
